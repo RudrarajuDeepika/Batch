@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<flow name="receptionPerformanceFlow" doc:id="11c35061-002d-4128-bccb-1877022c7617" >
+		<try doc:name="Try" doc:id="8d7697c7-06e3-4029-9669-671d9361538a">
+		<set-variable value="Reception" doc:name="Set Step" doc:id="8c65100c-2c34-470e-8023-cd230f167ca1" variableName="step" />
+			<ee:transform doc:name="Init Payload" doc:id="cc60874a-24b8-4d1f-b305-9c8e442c6a25">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	originalPayload: payload,
+	currentPayload: payload,
+	date: now(),
+	ID: "",
+	step: vars.step,
+	status: "OK"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="Payload" doc:id="ef8f14d3-410b-4a89-b715-538534cd21f0" message="Reception : #[payload]"/>
+			<async doc:name="Async" doc:id="841a43ea-9e06-41a4-94ac-339a5e4a2c8a">
+			<flow-ref doc:name="Trace" doc:id="48736ac6-f2ee-410a-8258-d6155bff454d" name="traceFlow" />
+		</async>
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="63354a63-e831-4fae-8c73-117bfaecb672">
+				<set-variable value="Reception" doc:name="Set Step" doc:id="5e309a78-344f-4335-bee1-58c402cbc1b5" variableName="step" />
+				<ee:transform doc:name="Init Payload" doc:id="da298979-e1cf-45b1-bec2-29cccf519342">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	originalPayload: payload,
+	currentPayload: payload,
+	date: now(),
+	ID: "",
+	step: vars.step,
+	status: "OK"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="ERROR" doc:name="Payload" doc:id="730cdcec-e49d-43f4-86a9-be4d7a587ab0" message="Error : #[payload]"/>
+			</on-error-propagate>
+		</error-handler>
+	</try>
+	</flow>
+	
+</mule>

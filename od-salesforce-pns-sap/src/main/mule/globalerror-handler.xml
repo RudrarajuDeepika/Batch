@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="globalError_Handler" doc:id="37a3f5e9-b8eb-4e80-93e8-22a97d97c6e0" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1fd7105f-a435-417c-9f62-6e8aca971e1e" >
+			<logger level="INFO" doc:name="Logger" doc:id="bec05933-7f17-41a6-a1ad-cca44d9e6e81" />
+			<async doc:name="Async" doc:id="285d851d-d54a-4b90-b380-6c283003dcf9" >
+				<ee:transform doc:name="Update Trace" doc:id="aca2def4-990c-4cf9-83c3-7300ccb2b28f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload ++ {
+	message: error.description,
+	status: "OK"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<flow-ref doc:name="traceFlow" doc:id="aae4e979-8b88-439b-a45c-97ae0fa20e84" name="traceFlow"/>
+			</async>
+		</on-error-propagate>
+	</error-handler>
+
+</mule>

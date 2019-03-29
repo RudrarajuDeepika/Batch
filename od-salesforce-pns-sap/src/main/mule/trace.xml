@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="traceFlow" doc:id="ac7b45dc-496b-4d89-9b48-37cef9290b41" >
+		<set-variable value="${metadata.source}" doc:name="Set Source" doc:id="af9fb04d-f42a-4eb5-923e-7f65f1272ee6" variableName="source"/>
+		<set-variable value="${metadata.target}" doc:name="Set Target" doc:id="da0f3b59-4938-4f23-adbf-12f31997781c" variableName="target"/>
+		<ee:transform doc:name="Init Trace" doc:id="48e0a2be-e826-4630-a570-bafe050ad9b8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	date: payload.date,
+	step: payload.step,
+	item: payload.ID,
+	source: vars.source,
+	target: vars.target,
+	status: payload.status
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Payload" doc:id="6ce1d310-5553-41ab-91d4-495645ea913b" message="#[payload]" category="TRACE"/>
+	</flow>
+
+		
+	
+	</mule>

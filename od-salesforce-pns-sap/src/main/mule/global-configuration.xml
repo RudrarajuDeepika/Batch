@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:sap="http://www.mulesoft.org/schema/mule/sap" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd http://www.mulesoft.org/schema/mule/sap http://www.mulesoft.org/schema/mule/sap/current/mule-sap.xsd">
+	
+	<configuration-properties doc:name="Configuration properties" doc:id="8e032afc-d033-4a2d-9c1b-e25169e1422a" file="mule.${mule.env}.properties" />
+	
+	<configuration-properties doc:name="Configuration properties" doc:id="27288bda-15bf-482f-bfe0-9f43ff922990" file="mule-artifact.properties" />
+	
+	<global-property doc:name="Global Property" doc:id="5e8fd7bc-21b1-4da8-b53d-9893982e87cb" name="mule.env" value="dev" />
+	
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="7fb46c99-1076-4909-a35d-b424dd29699d" >
+		<salesforce:basic-connection username="${sfdc.username}" password="${sfdc.password}" securityToken="${sfdc.securityToken}" url="https://test.salesforce.com/services/Soap/u/41.0"/>
+	</salesforce:sfdc-config>
+
+		<sap:outbound-config name="SAP_Outbound" doc:id="5282c7df-9b15-4b93-9cbe-9a2c9773cd7d" doc:name="SAP Outbound">
+		<sap:simple-connection-provider-connection applicationServerHost="${sap.jco.ashost}" client="${sap.jco.client}" language="${sap.jco.lang}" password="${sap.jco.passwd}" systemNumber="${sap.jco.sysnr}" username="${sap.jco.user}" />
+	</sap:outbound-config>
+	<configuration doc:name="Configuration" doc:id="58eca7a2-34cf-4f9e-b0a7-5836fe772026" defaultErrorHandler-ref="globalError_Handler" />
+	<configuration-properties doc:name="Configuration properties" doc:id="c0767289-c976-49a0-aabe-8746323b9d81" file="common.properties" />
+
+	
+</mule>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="od-salesforce-pns-sap-process" doc:id="aff4106d-d2f6-4366-940a-a380dcb1cf73">
+		<scheduler doc:name="Every 15 minutes" doc:id="58b7c776-fbee-4753-9bea-f6cc3e037efd">
+			<scheduling-strategy>
+				<fixed-frequency frequency="${scheduler.frequency}" startDelay="${scheduler.startDelay}" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</scheduler>
+		<flow-ref doc:name="Receiption" doc:id="15b828cd-fea7-4a20-b935-07f5748fcd17" name="receptionPerformanceFlow" />
+		<flow-ref name="retrievePNSlistfromSalesforce" doc:name="Get PNS list from Salesforce" doc:id="ada07859-8839-4751-9623-68a08d31a472" />
+		<logger level="INFO" doc:name="Logs PNS list" doc:id="65934ef1-2939-4fab-bde9-1886331527ea"
+			message="#['PNS Records list: ' ++ write(payload)]" />
+		<flow-ref name="processingPNSrecordsdataFlow" doc:name="Processing" doc:id="e16bf02c-b833-47de-afd5-2329ce1fab2b" />
+	</flow>
+	<flow name="retrievePNSlistfromSalesforce">
+		<logger level="INFO" doc:name="Start Application Logger" doc:id="a7942359-d89f-41a7-a285-4a5cd3e644ea" message="String the application!!!!!!!!!!!!!!!!"/>
+		<salesforce:query doc:name="Query PNS with filtering criteria from Salesforce" doc:id="0337257e-ff1a-43d5-8b1f-0dcf6921fbd4" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query >select Account__r.Customer_Id__c, Integration_Date__c, End_Date__c, Integration_Error_Message__c, Integration_Status__c, Price__c, Product__r.ProductCode, Start_Date__c, Id, Name
+ from PNS__c LIMIT 2</salesforce:salesforce-query>
+		</salesforce:query>
+		<logger level="INFO" doc:name="Salesforce ID" doc:id="e52a5340-f6e2-4e86-b1cd-e382a28b06cc" message="Salesforce ID : #[payload.Id]" category="Query"/>
+		<ee:transform doc:name="Salesforce Payload data" doc:id="1787f7a2-7cc5-413d-a43d-933870fa5242" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+
+	
+</flow>
+</mule>
+
+
+        

@@ -1,0 +1,70 @@
+{
+  "COND_A01": [
+    {
+      "IDOC": {
+        "EDI_DC40": {
+          "TABNAM": "EDI_DC40",
+          "DIRECT": "2",
+          "IDOCTYP": "COND_A01",
+          "MESTYP": "COND_A",
+          "SNDPOR": "ANYPOINT",
+          "SNDPRT": "LS",
+          "SNDPRN": "ANYPOINT",
+          "RCVPOR": "SAPSB2",
+          "RCVPRT": "LS",
+          "RCVPRN": "ANYPOINT"
+        },
+        "E1KOMG": {
+          "HIENR": "9506665",
+          "MATNR": "6466131",
+          "E1KONH": {
+            "DATBI": "20190206",
+            "DATAB": "20191231",
+            "E1KONP": {
+              "LOEVM_KO": null,
+              "KONWA": "EUR",
+              "KMEIN": "UNT",
+              "KZNEP": "X",
+              "E1KONM": {
+                "KBETR": "80.95"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "IDOC": {
+        "EDI_DC40": {
+          "TABNAM": "EDI_DC40",
+          "DIRECT": "2",
+          "IDOCTYP": "COND_A01",
+          "MESTYP": "COND_A",
+          "SNDPOR": "ANYPOINT",
+          "SNDPRT": "LS",
+          "SNDPRN": "ANYPOINT",
+          "RCVPOR": "SAPSB2",
+          "RCVPRT": "LS",
+          "RCVPRN": "ANYPOINT"
+        },
+        "E1KOMG": {
+          "HIENR": "9506665",
+          "MATNR": "6468345",
+          "E1KONH": {
+            "DATBI": "20190206",
+            "DATAB": "20191231",
+            "E1KONP": {
+              "LOEVM_KO": null,
+              "KONWA": "EUR",
+              "KMEIN": "UNT",
+              "KZNEP": "X",
+              "E1KONM": {
+                "KBETR": "106.74"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

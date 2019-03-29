@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:sap="http://www.mulesoft.org/schema/mule/sap"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/sap http://www.mulesoft.org/schema/mule/sap/current/mule-sap.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+	<flow name="processingPNSrecordsdataFlow" doc:id="bc6342a9-c083-43a6-83cb-9c12efac0fe9" >
+		<set-variable value="Processing" doc:name="Set Step" doc:id="83b9b875-945b-4fd5-a828-cf3f434d3f11" variableName="step"/>
+		<set-variable value="#[now()]" doc:name="Set Start Date" doc:id="377649fa-94bd-40eb-b139-33e1c526c415" variableName="startDate" />
+		<set-variable value='#["Job Performance From " ++ now() as String {format: "dd/MM/yyyy HH:mm:ss"}]' doc:name="Set Job Instance ID" doc:id="1e7f7f57-a73e-47a7-9764-44c8950d0a82" variableName="jobInstanceId" />
+		<set-variable value="#[payload.Id]" doc:name="Salesforce ID" doc:id="283b8195-ccc0-4dc2-8581-6c3249d69477" variableName="sfId" />
+		<batch:job jobName="od-sap-pns-salesforceBatch_Job" doc:id="4be05f18-bf82-4ab1-9880-f074ecbf7c33" maxFailedRecords="-1" jobInstanceId="#[vars.jobInstanceId]">
+			<batch:process-records >
+				<batch:step name="PNS-records-insert-into-SAP_Step" doc:id="267fd114-8f7f-4f36-a02e-23460e6736da" >
+					
+						<set-variable value="#[payload.Integration_Error_Message__c]" doc:name="ERROR LABEL Value" doc:id="00c2765b-9305-4bfa-abb9-8110036169ae" variableName="Error_Label" />
+					<logger level="INFO" doc:name="Salesforce Response Logger" doc:id="a8753e1f-fba5-431c-a3da-bfc7ba663e60" message="Salesforce Response : #[vars.sfId]"/>
+					<ee:transform doc:name="Field mappings to IDoc XML" doc:id="91d10cf5-348e-4439-8eae-fb5d3df712f4">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+//type mydate = String {format: "yyyyMMdd"}
+---
+{
+		 IDOC @(BEGIN: "1") :
+		{
+			EDI_DC40 @(SEGMENT: "1"):
+			{
+				TABNAM : 'EDI_DC40',
+				DIRECT : '2',
+				IDOCTYP : 'COND_A01',
+				MESTYP : 'COND_A',
+				SNDPOR : 'ANYPOINT',
+				SNDPRT : 'LS',
+				SNDPRN : 'ANYPOINT',
+				RCVPOR : 'SAPSB2',
+				RCVPRT : 'LS',
+				RCVPRN : 'ANYPOINT'
+			},
+		E1KOMG @(SEGMENT: "1"):
+		{
+			HIENR : payload.Account__r.Customer_ID__c,
+			MATNR : payload.Product__r.ProductCode,
+			KVEWE : 'A',
+            KOTABNR : '065',
+            KAPPL : 'V',
+			KSCHL : 'ZPNS',
+            VKORG : 'GF01',
+            VTWEG : 'Z1',
+            SPART : 'Z1',
+			E1KONH @(SEGMENT: "1"): 
+		{
+			DATAB : payload.Start_Date__c as Date {format: 'yyyy-MM-dd'} as String {format: 'yyyyMMdd'},
+			DATBI : payload.End_Date__c as Date {format: 'yyyy-MM-dd'} as String {format: 'yyyyMMdd'},
+			//DATBI : '20191231',
+			//DATAB : '20190206',
+			E1KONP @(SEGMENT: "1"): 
+		{
+			
+			LOEVM_KO : if ( payload.Integration_Status__c == false ) ' ' else 'X',
+			KONWA : 'EUR',
+			KMEIN : 'PCE',
+			KZNEP : 'X',
+		E1KONM @(SEGMENT: "1"): 
+			{
+			KBETR : payload.Price__c,
+		}	
+		
+		}	
+		}
+		}		
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="send-PNS-recordlist-to-SAPiDOC" doc:id="f06b3663-b444-48c7-bf3f-764ce7efffd9" size="${aggregator.size}">
+						<logger level="INFO" doc:name="Accumulated Idoc's Response Logger" doc:id="d0274199-5f86-4a8b-83cc-88724cf166e4" message="Accumulated Idoc's in Aggregator : #[payload]" />
+						<ee:transform doc:name="Set XML IDoc Format" doc:id="25d8a3cf-28fe-4e9c-8d70-248753889eb4" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml encoding='UTF-8'
+---
+{
+	COND_A01: {
+		IDOC: payload.IDOC
+	}
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<logger level="INFO" doc:name="IDoc XML Logger" doc:id="8ce08a9b-e8b2-4ab8-a385-b4cec017079b" message="IDoc XML Format : #[payload]"/>
+						<sap:send key="COND_A01" doc:name="Send IDoc" doc:id="77838370-53ee-43ee-8585-4a5f1c71a2b2" config-ref="SAP_Outbound" />
+						<logger level="INFO" doc:name="Logger" doc:id="bcb68919-fcee-4e19-9710-03b377017d3b" message="After SAP IDoc : #[payload]"/>
+					</batch:aggregator>
+					<ee:transform doc:name="Set Java format" doc:id="1cc1d10c-7fdc-41f5-8271-6d7fc4c4fc6c" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					
+				
+</batch:step>
+				<batch:step name="updatedata-into-Salesforce_Step" doc:id="2d77d6c0-ddf2-415f-9d27-2f5221e32bb4" >
+					<ee:transform doc:name="JSON to Java payload" doc:id="111853fb-176f-4f12-9a59-fd516bb528c8">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					<logger level="INFO" doc:name="Java Logger Response" doc:id="9835882e-69c6-4109-b8be-107a9a549538" message="Payload in Process : #[payload]"/>
+					<batch:aggregator doc:name="update-data-Salesforce" doc:id="8609a82a-979f-4e37-a567-221c256c9d86" size="${aggregator.size}">
+						<ee:transform doc:name="Update mapping data with Id" doc:id="3f979565-61a9-41ba-979a-d5e8577e258a" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload.*IDOC map (idoc , index )->
+{
+	(Id: vars.sfId) if (vars.sfId != null),
+	Integration_Status__c : if (idoc.E1KOMG.E1KONH.E1KONP.LOEVM_KO == 'X') false else true,
+	Integration_Date__c : ' '
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<logger level="INFO" doc:name="Logger" doc:id="2af2fff3-a49a-463c-b976-81d9f6713d92" message="In aggregator Salesforce ID : #[payload.Integration_Status__c], #[payload.Integration_Date__c]"/>
+						<salesforce:upsert-bulk type="PNS__c" doc:name="update-pns-data" doc:id="4e8eebe5-666c-4fa1-9e2f-63748b27fbe4" config-ref="Salesforce_Config" externalIdFieldName="Id"/>
+					</batch:aggregator>
+				</batch:step>
+			
+</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Update PNS records process has finished!" doc:id="157c44b1-ec47-4066-93ac-c4d8ce15f5d7" message="Update PNS records process has finished!" />
+			
+</batch:on-complete>
+		</batch:job>
+		<async doc:name="Async" doc:id="ad14be29-47b5-43e7-9a73-b6f778d22d2a" >
+			<ee:transform doc:name="Init payload" doc:id="07365672-d0ee-4e70-9bef-07408b466d3d" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	originalPayload: "Large volume of data stream...",
+	currentPayload: "Large volume of data stream...",
+	ID: vars.jobInstanceId,
+	step: vars.step,
+	date: vars.startDate,
+	status: "OK"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="traceFlow" doc:id="b7258e00-c2b6-445b-9e80-913004c466e8" name="traceFlow"/>
+		</async>
+	
+</flow>
+</mule>
